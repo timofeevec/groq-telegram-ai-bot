@@ -9,8 +9,8 @@ load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_TEXT_MODEL = "llama-3.1-8b-instant"  # Текст: Рекомендованная замена для 8B (2025)
-GROQ_VISION_MODEL = "llama-3.2-90b-vision-preview"  # Фото: Стабильная Vision модель
+GROQ_TEXT_MODEL = "llama-3.1-8b-instant"  # Текст: Production, стабильная (замена для 8B)
+GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Фото: Preview Vision (замена для Llama 3.2)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,8 +21,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(
         "🤖 <b>Groq AI Vision Bot 2025</b>\n\n"
         "📝 Пиши вопросы (Llama 3.1 8B Instant)\n"
-        "🖼️ Отправляй фото - распознаю! (Llama 3.2 90B Vision)\n"
-        "💬 Обновлено: 17.10.2025 | Модели свежие!"
+        "🖼️ Отправляй фото - распознаю! (Llama 4 Scout Vision)\n"
+        "💬 Обновлено: 17.10.2025 | Модели из Groq Docs"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -36,7 +36,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 {"role": "system", "content": "Ты полезный ассистент. Отвечай кратко и точно на русском."},
                 {"role": "user", "content": user_message}
             ],
-            model=GROQ_TEXT_MODEL,  # Актуальная текстовая модель
+            model=GROQ_TEXT_MODEL,
             temperature=0.7,
             max_tokens=1024,
         )
@@ -75,13 +75,13 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     ]
                 }
             ],
-            model=GROQ_VISION_MODEL,  # Актуальная Vision модель
+            model=GROQ_VISION_MODEL,
             temperature=0.3,
             max_tokens=1500,
         )
         
         ai_response = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🖼️ <b>Анализ фото (Llama 3.2 Vision):</b>\n\n{ai_response}", parse_mode='HTML')
+        await update.message.reply_text(f"🖼️ <b>Анализ фото (Llama 4 Scout Vision):</b>\n\n{ai_response}", parse_mode='HTML')
         
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка фото: {str(e)}")
@@ -94,7 +94,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     
-    print("🚀 Groq Vision Bot 2025 запущен! Модели: 3.1 Instant + 3.2 Vision.")
+    print("🚀 Groq Vision Bot 2025 запущен! Модели: 3.1 Instant + Llama 4 Scout Vision.")
     application.run_polling()
 
 if __name__ == '__main__':
