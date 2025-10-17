@@ -9,8 +9,8 @@ load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_TEXT_MODEL = "llama3-8b-8192"  # Текст: Llama 3 8B (быстрый, стабильный)
-GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview"  # Фото: Llama 3.2 11B Vision
+GROQ_TEXT_MODEL = "llama-3.1-8b-instant"  # Текст: Рекомендованная замена для 8B (2025)
+GROQ_VISION_MODEL = "llama-3.2-90b-vision-preview"  # Фото: Стабильная Vision модель
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,9 +20,9 @@ client = OpenAI(api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(
         "🤖 <b>Groq AI Vision Bot 2025</b>\n\n"
-        "📝 Пиши вопросы (Llama 3 8B)\n"
-        "🖼️ Отправляй фото - распознаю! (Llama 3.2 Vision)\n"
-        "💬 Обновлено: 17.10.2025"
+        "📝 Пиши вопросы (Llama 3.1 8B Instant)\n"
+        "🖼️ Отправляй фото - распознаю! (Llama 3.2 90B Vision)\n"
+        "💬 Обновлено: 17.10.2025 | Модели свежие!"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -36,13 +36,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 {"role": "system", "content": "Ты полезный ассистент. Отвечай кратко и точно на русском."},
                 {"role": "user", "content": user_message}
             ],
-            model=GROQ_TEXT_MODEL,  # Текстовая модель
+            model=GROQ_TEXT_MODEL,  # Актуальная текстовая модель
             temperature=0.7,
             max_tokens=1024,
         )
         await update.message.reply_text(response.choices[0].message.content.strip())
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка текста: {str(e)}")
+        logger.error(f"Text Error: {e}")
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
@@ -74,7 +75,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     ]
                 }
             ],
-            model=GROQ_VISION_MODEL,  # Vision модель!
+            model=GROQ_VISION_MODEL,  # Актуальная Vision модель
             temperature=0.3,
             max_tokens=1500,
         )
@@ -93,7 +94,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     
-    print("🚀 Groq Vision Bot 2025 запущен! Модели обновлены.")
+    print("🚀 Groq Vision Bot 2025 запущен! Модели: 3.1 Instant + 3.2 Vision.")
     application.run_polling()
 
 if __name__ == '__main__':
