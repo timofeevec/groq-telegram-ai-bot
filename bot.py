@@ -4,13 +4,14 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import base64  # Добавляем для корректного кодирования фото
 
 load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_TEXT_MODEL = "llama-3.1-8b-instant"  # Текст: Production, стабильная (замена для 8B)
-GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Фото: Preview Vision (замена для Llama 3.2)
+GROQ_TEXT_MODEL = "llama-3.1-8b-instant"  # Текст: Production, стабильная
+GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Фото: Preview Vision
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "🤖 <b>Groq AI Vision Bot 2025</b>\n\n"
         "📝 Пиши вопросы (Llama 3.1 8B Instant)\n"
         "🖼️ Отправляй фото - распознаю! (Llama 4 Scout Vision)\n"
-        "💬 Обновлено: 17.10.2025 | Модели из Groq Docs"
+        "💬 Обновлено: 17.10.2025 | Исправлено base64"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -55,6 +56,9 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         file = await context.bot.get_file(photo.file_id)
         photo_bytes = await file.download_as_bytearray()
         
+        # Корректное кодирование в base64
+        photo_base64 = base64.b64encode(photo_bytes).decode('utf-8')
+        
         # Vision запрос
         response = client.chat.completions.create(
             messages=[
@@ -69,7 +73,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{photo_bytes.hex()}"
+                                "url": f"data:image/jpeg;base64,{photo_base64}"
                             }
                         }
                     ]
@@ -94,7 +98,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     
-    print("🚀 Groq Vision Bot 2025 запущен! Модели: 3.1 Instant + Llama 4 Scout Vision.")
+    print("🚀 Groq Vision Bot 2025 запущен! Исправлено base64 для фото.")
     application.run_polling()
 
 if __name__ == '__main__':
