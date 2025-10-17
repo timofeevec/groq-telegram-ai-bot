@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
-import base64  # Добавляем для корректного кодирования фото
+import base64
 
 load_dotenv()
 
@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "🤖 <b>Groq AI Vision Bot 2025</b>\n\n"
         "📝 Пиши вопросы (Llama 3.1 8B Instant)\n"
         "🖼️ Отправляй фото - распознаю! (Llama 4 Scout Vision)\n"
-        "💬 Обновлено: 17.10.2025 | Исправлено base64"
+        "💬 Обновлено: 17.10.2025 | Исправлено изображение"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -52,9 +52,13 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     logger.info(f"Фото от {user.id}")
 
     try:
-        # Скачиваем фото
+        # Скачиваем фото как байты
         file = await context.bot.get_file(photo.file_id)
-        photo_bytes = await file.download_as_bytearray()
+        photo_bytes = bytes(await file.download_as_bytearray())  # Преобразуем в bytes
+        
+        # Проверяем валидность данных (не пусто и не повреждено)
+        if not photo_bytes or len(photo_bytes) == 0:
+            raise ValueError("Пустое или поврежденное изображение")
         
         # Корректное кодирование в base64
         photo_base64 = base64.b64encode(photo_bytes).decode('utf-8')
@@ -98,7 +102,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     
-    print("🚀 Groq Vision Bot 2025 запущен! Исправлено base64 для фото.")
+    print("🚀 Groq Vision Bot 2025 запущен! Исправлена обработка изображений.")
     application.run_polling()
 
 if __name__ == '__main__':
